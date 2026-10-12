@@ -1,0 +1,750 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Behind the Scenes</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Heebo:wght@400;500;700;900&family=Secular+One&display=swap">
+<style>
+/* Layout: one-column call sheet under a clapper-board header; sticky progress rail; teacher view is a wide table. */
+:root{
+  --bg:#EDF1F5; --surface:#FFFFFF; --ink:#111C2A; --muted:#566475; --line:#CAD4DF;
+  --accent:#0A63C9; --accent-ink:#FFFFFF; --accent-soft:#DCEBFA;
+  --amber:#B87500; --amber-soft:#FFF0CC;
+  --ok:#16794C; --ok-soft:#DDF3E8; --bad:#C02B2B; --bad-soft:#FBE3E3;
+  --f-body:'Heebo',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --f-disp:'Bebas Neue','Heebo',Impact,sans-serif;
+  --f-he:'Secular One','Heebo',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D1620; --surface:#152131; --ink:#E9EFF6; --muted:#9AA9BA; --line:#2A3B4F;
+    --accent:#5DB0FF; --accent-ink:#07192B; --accent-soft:#17324E;
+    --amber:#FFC845; --amber-soft:#3A2F10;
+    --ok:#52D49A; --ok-soft:#12362A; --bad:#FF8080; --bad-soft:#3E1D20;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D1620; --surface:#152131; --ink:#E9EFF6; --muted:#9AA9BA; --line:#2A3B4F;
+  --accent:#5DB0FF; --accent-ink:#07192B; --accent-soft:#17324E;
+  --amber:#FFC845; --amber-soft:#3A2F10;
+  --ok:#52D49A; --ok-soft:#12362A; --bad:#FF8080; --bad-soft:#3E1D20;
+  color-scheme:dark;
+}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55}
+*,*::before,*::after{box-sizing:border-box}
+.wrap{max-width:780px;margin:0 auto;padding-inline:16px;padding-block:18px 56px}
+.wrap.wide{max-width:1120px}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+h1,h2,h3,p{margin:0}
+
+/* masthead */
+.mast{margin-bottom:22px}
+.clap{height:20px;background:repeating-linear-gradient(-45deg,var(--ink) 0 14px,var(--surface) 14px 28px);border:2px solid var(--ink);border-bottom:0;border-radius:4px 4px 0 0;transform:rotate(-3deg);transform-origin:100% 100%;transition:transform .2s ease-out}
+.clapped .clap{transform:none}
+.mast-body{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;background:var(--surface);border:2px solid var(--ink);padding:14px 16px 12px}
+h1{font-family:var(--f-disp);font-weight:400;font-size:clamp(2.4rem,9vw,3.6rem);line-height:.95;letter-spacing:.02em;direction:ltr}
+.sub{color:var(--muted);font-size:.95rem;margin-top:4px}
+.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:7px 12px;font-size:.9rem}
+.ghost:hover{border-color:var(--accent);color:var(--accent)}
+.slate{display:grid;grid-template-columns:repeat(3,1fr);margin:0;border:2px solid var(--ink);border-top:0;background:var(--surface)}
+.slate div{padding:6px 14px;border-inline-start:1px solid var(--line);direction:ltr;text-align:left}
+.slate div:first-child{border-inline-start:0}
+.slate dt{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.slate dd{margin:0;font-family:var(--f-disp);font-size:1.5rem;line-height:1.1;font-variant-numeric:tabular-nums}
+
+/* cards, forms */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:20px}
+.card h2{font-family:var(--f-he);font-weight:400;font-size:1.5rem;margin-bottom:8px}
+.lead{color:var(--muted);margin-bottom:14px}
+.facts{display:grid;gap:6px;margin:0 0 18px;padding:0;list-style:none}
+.facts li{padding-inline-start:16px;position:relative}
+.facts li::before{content:"";position:absolute;inset-inline-start:0;top:.7em;width:7px;height:7px;background:var(--amber);border-radius:1px}
+.fields{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:16px}
+.fields label{display:grid;gap:4px;font-weight:500;font-size:.9rem;min-width:0}
+input[type=text],input[type=password],select,textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;min-height:42px;max-width:100%}
+textarea{width:100%;min-height:96px;resize:vertical;direction:ltr;text-align:left}
+.btn{background:var(--accent);color:var(--accent-ink);border:0;border-radius:6px;padding:11px 20px;font-weight:700}
+.btn:hover{filter:brightness(1.08)}
+.btn.alt{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+.btn:disabled{opacity:.55;cursor:default}
+.err{color:var(--bad);font-weight:500;min-height:1.4em;margin-top:8px}
+
+/* rail */
+.rail{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:8px;margin-bottom:6px;border-bottom:1px solid var(--line)}
+.rail-top{display:flex;align-items:center;gap:10px;margin-bottom:6px;font-size:.88rem;flex-wrap:wrap}
+.pass{background:var(--amber-soft);color:var(--ink);border:1px solid var(--amber);border-radius:4px;padding:1px 9px;font-weight:700}
+.prog{flex:1;min-width:90px;height:8px;background:var(--line);border-radius:4px;overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:var(--accent);transition:width .25s}
+.cnt{font-variant-numeric:tabular-nums;color:var(--muted)}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.chip{flex:none;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:3px 11px;font-size:.82rem;white-space:nowrap}
+.chip.done{border-color:var(--ok);color:var(--ok)}
+.chip:hover{border-color:var(--accent)}
+
+/* sections */
+.sec{padding-top:34px}
+.sec-h{border-bottom:2px solid var(--ink);padding-bottom:10px;margin-bottom:6px}
+.st{font-family:var(--f-disp);letter-spacing:.14em;color:var(--accent);font-size:1.05rem;direction:ltr;display:block}
+.sec-h h2{font-family:var(--f-disp);font-weight:400;font-size:2.2rem;line-height:1;letter-spacing:.02em;direction:ltr;text-align:right}
+.sec-h .he{font-family:var(--f-he);font-size:1.15rem;margin-top:2px}
+.note{background:var(--accent-soft);border-radius:6px;padding:9px 12px;margin-top:10px;font-size:.93rem}
+.block{margin-top:22px}
+.instr{font-weight:700;margin-bottom:8px}
+.bank{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;direction:ltr;padding:10px;border:1px dashed var(--line);border-radius:6px}
+.bank span{background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:1px 9px;font-size:.92rem}
+.q{direction:ltr;text-align:left;padding:16px 0;border-top:1px solid var(--line);scroll-margin-top:130px}
+.q:first-of-type{border-top:0}
+.qn{font-family:var(--f-disp);font-size:1rem;letter-spacing:.1em;color:var(--muted)}
+.qt{font-size:1.06rem;margin:2px 0 10px;unicode-bidi:plaintext}
+.qt.inline{line-height:2.4}
+.qt.inline select,.qt.inline input{margin-inline:6px;vertical-align:middle}
+.qt .big{font-family:var(--f-disp);font-size:1.7rem;letter-spacing:.04em;font-weight:400}
+.opts{display:grid;gap:7px}
+.opt{display:flex;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:9px 12px;cursor:pointer}
+.opt:hover{border-color:var(--accent)}
+.opt:has(input:checked){background:var(--accent-soft);border-color:var(--accent)}
+.opt input{accent-color:var(--accent);width:18px;height:18px;flex:none;margin:0}
+.ot{unicode-bidi:plaintext;text-align:left}
+.q.flash{animation:flash 1.2s ease 2}
+@keyframes flash{50%{background:var(--amber-soft)}}
+.q.ok .opt.right,.q.bad .opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.q.bad .opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.q.ok select,.q.ok input[type=text]{border-color:var(--ok);background:var(--ok-soft)}
+.q.bad select,.q.bad input[type=text]{border-color:var(--bad);background:var(--bad-soft)}
+.fb{direction:rtl;text-align:right;margin-top:10px;font-size:.93rem;padding:8px 12px;border-radius:6px}
+.fb b{margin-inline-end:6px}
+.fb .ans{direction:ltr;unicode-bidi:isolate;font-weight:700}
+.q.ok .fb{background:var(--ok-soft);color:var(--ok)}
+.q.bad .fb,.q.skip .fb{background:var(--bad-soft);color:var(--bad)}
+.fb .why{display:block;color:var(--ink);margin-top:2px}
+
+/* submit + result */
+.submit{margin-top:34px;padding:20px;background:var(--surface);border:2px solid var(--ink);border-radius:8px;text-align:center}
+.submit p{margin-bottom:12px}
+.warn{background:var(--amber-soft);border:1px solid var(--amber);border-radius:6px;padding:12px;margin-bottom:14px;display:grid;gap:10px;justify-items:center}
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.result{background:var(--surface);border:2px solid var(--ink);border-radius:8px;padding:22px;margin-top:6px;display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:center}
+.ring{width:150px;height:150px}
+.ring .trk{fill:none;stroke:var(--line);stroke-width:10}
+.ring .val{fill:none;stroke:var(--accent);stroke-width:10;stroke-linecap:round;transition:stroke-dashoffset 1s ease-out}
+.ring text{font-family:var(--f-disp);font-size:44px;fill:var(--ink);font-variant-numeric:tabular-nums}
+.rank{font-family:var(--f-disp);font-size:2rem;letter-spacing:.04em;direction:ltr;text-align:right;line-height:1}
+.bars{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:6px}
+.bars li{display:grid;grid-template-columns:110px 1fr 52px;gap:8px;align-items:center;font-size:.86rem}
+.bars span{direction:ltr;text-align:right}
+.bars b{direction:ltr;text-align:left;font-variant-numeric:tabular-nums}
+.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent)}
+.savest{grid-column:1/-1;color:var(--muted);font-size:.9rem;border-top:1px solid var(--line);padding-top:10px}
+.result .row{grid-column:1/-1;justify-content:flex-start}
+
+/* teacher */
+.tbar{display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+.tbar h2{font-family:var(--f-he);font-weight:400;font-size:1.6rem}
+.gate{max-width:360px;margin:30px auto}
+.gate .row{justify-content:flex-start;align-items:center}
+.gate input{width:130px;text-align:center;letter-spacing:.3em}
+.stats{display:flex;gap:10px 22px;flex-wrap:wrap;margin:0 0 14px;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.stats div{display:grid}
+.stats dt{font-size:.78rem;color:var(--muted)}
+.stats dd{margin:0;font-family:var(--f-disp);font-size:1.7rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+.filters input[type=text]{min-width:0;width:170px}
+.tscroll{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap;font-variant-numeric:tabular-nums}
+th{background:var(--bg);font-weight:700;font-size:.8rem;position:sticky;top:0}
+th button{background:none;border:0;color:inherit;font:inherit;font-weight:700;padding:0}
+.sc{display:inline-block;min-width:42px;text-align:center;border-radius:4px;padding:1px 8px;font-weight:700;background:var(--accent-soft)}
+.sc.hi{background:var(--ok-soft);color:var(--ok)}
+.sc.lo{background:var(--bad-soft);color:var(--bad)}
+td.det{white-space:normal;background:var(--bg)}
+.det ul{margin:6px 0 0;padding-inline-start:20px}
+.det li{margin-bottom:6px}
+.det .en{direction:ltr;unicode-bidi:isolate;display:inline-block}
+.tiny{font-size:.82rem;padding:3px 9px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+.cols>section{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px;min-width:0}
+.cols h3{font-size:1rem;margin-bottom:10px}
+.hist{display:grid;gap:6px}
+.hist div{display:grid;grid-template-columns:64px 1fr 28px;gap:8px;align-items:center;font-size:.85rem}
+.hist span{direction:ltr;text-align:right}
+.hard{margin:0;padding-inline-start:20px;font-size:.88rem}
+.hard li{margin-bottom:6px}
+.hard .en{direction:ltr;unicode-bidi:isolate;display:inline-block}
+.muted{color:var(--muted)}
+@media (max-width:560px){
+  .fields{grid-template-columns:1fr}
+  .result{grid-template-columns:1fr;justify-items:center;text-align:center}
+  .rank{text-align:center}
+  .bars{width:100%}
+  .cols{grid-template-columns:1fr}
+  .slate div{padding-inline:10px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+
+<div class="wrap" id="app" dir="rtl" lang="he">
+  <header class="mast" id="mast">
+    <div class="clap" aria-hidden="true"></div>
+    <div class="mast-body">
+      <div>
+        <h1>Behind the Scenes</h1>
+        <p class="sub">דף עבודה אינטראקטיבי · Reading 1</p>
+      </div>
+      <button class="ghost" id="tBtn" type="button">אזור מורה</button>
+    </div>
+    <dl class="slate">
+      <div><dt>Pages</dt><dd>8–9</dd></div>
+      <div><dt>Questions</dt><dd id="sQ">80</dd></div>
+      <div><dt>Take</dt><dd id="sT">1</dd></div>
+    </dl>
+  </header>
+
+  <main id="student">
+    <section class="card" id="start">
+      <h2>לפני שמתחילים לצלם</h2>
+      <p class="lead">הדף מבוסס על הקטעים Winning a Race, Changing the Way You Look, Making a Movie ו-Solving a Crime, ועל רשימת ה-New Words.</p>
+      <ul class="facts">
+        <li>80 שאלות בשישה חלקים: אוצר מילים, ארבעה קטעי קריאה, וחלק מסכם.</li>
+        <li>פתחו את הספר בעמודים 8–9. התשובות לשאלות הקריאה נמצאות בקטעים.</li>
+        <li>אפשר לעבור בין החלקים ולחזור אחורה. הבדיקה והציון מתקבלים רק אחרי ההגשה.</li>
+      </ul>
+      <form id="startForm" autocomplete="off">
+        <div class="fields">
+          <label for="fName">שם מלא
+            <input type="text" id="fName" maxlength="60" required>
+          </label>
+          <label for="fCls">כיתה
+            <input type="text" id="fCls" maxlength="12" placeholder="לדוגמה: ז'2" required>
+          </label>
+        </div>
+        <button class="btn" type="submit">Action! מתחילים</button>
+        <p class="err" id="startErr" role="alert"></p>
+      </form>
+    </section>
+
+    <div id="ws" hidden>
+      <div class="rail">
+        <div class="rail-top">
+          <span class="pass" id="pass"></span>
+          <div class="prog" aria-hidden="true"><i id="progBar"></i></div>
+          <span class="cnt" id="progTxt"></span>
+        </div>
+        <div class="chips" id="chips"></div>
+      </div>
+      <div id="resultMount"></div>
+      <div id="secMount"></div>
+      <div class="submit" id="submitBox">
+        <div class="warn" id="warn" hidden>
+          <p id="warnTxt"></p>
+          <div class="row">
+            <button class="btn alt" type="button" id="warnBack">חזרה לשאלות שנשארו</button>
+            <button class="btn" type="button" id="warnGo">הגשה בכל זאת</button>
+          </div>
+        </div>
+        <p>סיימתם? ההגשה בודקת את כל התשובות ומציגה ציון.</p>
+        <button class="btn" type="button" id="submitBtn">הגשה ובדיקה</button>
+      </div>
+    </div>
+  </main>
+
+  <main id="teacher" hidden>
+    <div class="tbar">
+      <h2>אזור מורה</h2>
+      <div class="row">
+        <button class="ghost" type="button" id="tLock">נעילה וחזרה לדף</button>
+      </div>
+    </div>
+    <section class="card gate" id="gate">
+      <h2>כניסה עם קוד</h2>
+      <form id="gateForm">
+        <div class="row">
+          <input type="password" id="code" inputmode="numeric" autocomplete="off" aria-label="קוד מורה" maxlength="12">
+          <button class="btn" type="submit">כניסה</button>
+        </div>
+        <p class="err" id="gateErr" role="alert"></p>
+      </form>
+    </section>
+    <div id="tPanel" hidden></div>
+  </main>
+</div>
+
+<script>
+/*DATA*/
+const JOBS=["Race-car mechanic","Make-up artist","Location scout","Forensic technician"];
+const TITLES=["Winning a Race","Changing the Way You Look","Making a Movie","Solving a Crime"];
+const mc=(q,o,a,why)=>({t:"mc",q,o,a,why});
+const tf=(q,a,why)=>({t:"tf",q,a,why});
+const sel=(q,a)=>({t:"sel",q,a});
+const txt=(q,a)=>({t:"txt",q,a});
+const SECTIONS=[
+ {id:"p1",short:"Words",title:"Word Lab",he:"מעבדת מילים",
+  note:"השאלות בחלק הזה מתבססות על רשימת ה-New Words (קבוצות A–D בעמוד 8).",
+  blocks:[
+   {instr:"1. לכל קבוצת מילים בחרו את הכתבה שהיא שייכת אליה.",bank:TITLES,items:[
+     sel("Group A: desert · movie · photo · several · travel","Making a Movie"),
+     sel("Group B: appearance · character · imagination · imagine · turn into","Changing the Way You Look"),
+     sel("Group C: blood · court · explain · identify · laboratory · scene · scientist · step","Solving a Crime"),
+     sel("Group D: check · exciting · make sure · mechanic · perfect · pressure · pull up · second · tire","Winning a Race")]},
+   {instr:"2. בחרו את התרגום הנכון לעברית.",items:[
+     mc("<span class='big'>desert</span>",["מדבר","ים","הר","כביש"],0),
+     mc("<span class='big'>mechanic</span>",["מכונאי","שופט","צלם","שוטר"],0),
+     mc("<span class='big'>imagine</span>",["לדמיין","לנסוע","להסביר","לצלם"],0),
+     mc("<span class='big'>scientist</span>",["מדען","שחקן","נהג","שופט"],0),
+     mc("<span class='big'>tire</span>",["צמיג","דלק","בלם","מנוע"],0),
+     mc("<span class='big'>explain</span>",["להסביר","לבדוק","לזהות","לנסוע"],0),
+     mc("<span class='big'>blood</span>",["דם","עור","עצם","שיער"],0),
+     mc("<span class='big'>pressure</span>",["לחץ","מהירות","דלק","שמחה"],0),
+     mc("<span class='big'>court</span>",["בית משפט","מעבדה","מדבר","בית ספר"],0),
+     mc("<span class='big'>appearance</span>",["מראה חיצוני","דמיון","תסריט","מהירות"],0)]},
+   {instr:"3. השלימו כל משפט במילה מתוך הבנק. כל מילה משמשת פעם אחת, ומילה אחת מיותרת.",showBank:true,
+    bank:["appearance","character","check","exciting","identify","imagination","laboratory","perfect","pressure","pull up","scene","several","travel"],items:[
+     sel("Fingerprints help the police ___ the criminal.","identify"),
+     sel("The forensic technician tests the blood in the ___.","laboratory"),
+     sel("The driver has to ___ at the pit stop.","pull up"),
+     sel("Make-up can change an actor's ___.","appearance"),
+     sel("To turn a girl into an old woman, an artist needs skill and ___.","imagination"),
+     sel("Before the race, the mechanic must ___ the brakes carefully.","check"),
+     sel("The mechanic's work must be ___. One mistake can cost the race.","perfect"),
+     sel("The location scout has to ___ to many different places.","travel"),
+     sel("This movie was filmed in ___ different countries.","several"),
+     sel("The mechanic works under great ___ because every second counts.","pressure"),
+     sel("Each ___ in the movie needs its own location.","scene"),
+     sel("Tom Holden says the job is hard, but very ___.","exciting")]},
+   {instr:"4. בכל שאלה בחרו את המילה שלא שייכת לשאר.",items:[
+     mc("Which word does NOT belong to a <b>crime lab</b>?",["blood","laboratory","scientist","desert"],3),
+     mc("Which word does NOT belong to a <b>car race</b>?",["tire","mechanic","second","photo"],3),
+     mc("Which word does NOT belong to <b>making a movie</b>?",["scene","movie","photo","laboratory"],3),
+     mc("Which word does NOT belong to a person's <b>looks</b>?",["appearance","imagine","character","court"],3)]},
+   {instr:"5. מה פירוש הביטוי המודגש במשפט?",items:[
+     mc("The mechanic must <b>make sure</b> the car is safe.",["be certain","build","sell","forget"],0),
+     mc("A make-up artist can <b>turn</b> a young man <b>into</b> an old man.",["change him to","take him from","send him to","show him to"],0),
+     mc("The race car <b>pulls up</b> to the pit stop.",["arrives and stops","drives away fast","breaks down","turns around"],0)]},
+   {instr:"6. כתבו באנגלית את המילה שמתאימה לתרגום.",items:[
+     txt("מעבדה",["laboratory","lab"]),
+     txt("דמיון",["imagination"]),
+     txt("מושלם",["perfect"]),
+     txt("מדבר (שם עצם)",["desert"]),
+     txt("לבדוק",["check","to check"])]}
+  ]},
+
+ {id:"p2",short:"Race",title:"Pit Stop",he:"קטע 1: Winning a Race",
+  note:"קראו שוב את Text 1, Winning a Race (עמוד 8), לפני שעונים. בשאלה 9 מצוינת שורה בטקסט.",
+  blocks:[{instr:"בחרו את התשובה הנכונה.",items:[
+   mc("What is the text mainly about?",["The work of race-car mechanics during a pit stop","How to become a race-car driver","The history of car racing","How fast a race car can go"],0,"הטקסט כולו עוסק במה שקורה בעצירת הפיט."),
+   mc("How many seconds later is the car back in the race?",["13","30","31","60"],0,"בפסקה הראשונה."),
+   tf("The mechanics put fuel in the car, change the tires and check the brakes.",true,"פסקה שנייה, שורות 5–7."),
+   tf("At a pit stop, the driver changes the tires.",false,"את העבודה עושים המכונאים, לא הנהג."),
+   mc("What makes the mechanic's job difficult?",["The pressure","The long hours","The noise of the cars","The bad weather"],0,"פסקה שלישית."),
+   mc("Who is Tom Holden?",["A race-car mechanic","A race-car driver","A race director","A reporter"],0),
+   mc("How does Tom Holden describe the job?",["Hard, but very exciting","Easy and boring","Dangerous and dirty","Slow and quiet"],0),
+   mc("Why does the driver need every second on the race track?",["To succeed in the race","To check the brakes","To save fuel","To meet the mechanics"],0),
+   mc("In line 10, the word <b>it</b> refers to...",["the driver winning the race","the pit stop","the fuel","the pressure"],0,"המשפט מדבר על כך שהנהג רוצה לנצח, והמכונאי דואג שזה יקרה."),
+   mc("What happens when the mechanic does a perfect job?",["The car finishes the race safely and in first place","The driver stops the race","The pit stop takes longer","The tires last forever"],0,"שורות 18–20.")]}]},
+
+ {id:"p3",short:"Make-up",title:"Make-up Chair",he:"קטע 2: Changing the Way You Look",
+  note:"קראו שוב את Text 2, Changing the Way You Look (עמוד 9).",
+  blocks:[{instr:"בחרו את התשובה הנכונה.",items:[
+   mc("Who works to change an actor's appearance?",["Make-up artists","Directors","Location scouts","Mechanics"],0),
+   mc("What do make-up artists use in their work?",["Imagination and skill","Cameras and photos","Fuel and tires","Fingerprints and DNA"],0),
+   tf("Make-up artists work only in the theater.",false,"הם עובדים גם בסרטים ובטלוויזיה."),
+   mc("Which place is NOT mentioned as a place where make-up artists work?",["A laboratory","The theater","Movies","Television"],0),
+   tf("The make-up artist's job is always easy.",false,"הכתבה אומרת שלפעמים זה לא קל."),
+   mc("In the movie Mrs. Doubtfire, how many hours a day did the make-up artist work?",["More than four hours","About one hour","Two hours","Ten hours"],0),
+   mc("Who was turned into a British nanny?",["Robin Williams","Tom Holden","A pretty girl","A forensic technician"],0),
+   mc("Why does the writer begin the text with questions?",["To make the reader interested in the topic","To test the reader","To give the final answer","To end the text"],0)]}]},
+
+ {id:"p4",short:"Movie",title:"On Location",he:"קטע 3: Making a Movie",
+  note:"קראו שוב את Text 3, Making a Movie (עמוד 9).",
+  blocks:[{instr:"בחרו את התשובה הנכונה.",items:[
+   mc("Who is the first person to work on a movie?",["The location scout","The director","The actor","The make-up artist"],0),
+   tf("Today, all movies are filmed in Hollywood studios.",false,"הסרטים מצולמים גם ברחובות, במדבר ובחוף."),
+   mc("What does the location scout look for?",["Places where the director can film the scenes","Actors for the movie","Money for the movie","Costumes for the actors"],0),
+   mc("How many places can a movie need?",["More than 50","About 5","Exactly 15","More than 500"],0),
+   mc("What does the location scout do first?",["She reads the script","She takes photos","She travels to Los Angeles","She calls the actors"],0),
+   tf("The location scout travels to different places before she reads the script.",false,"קודם היא קוראת את התסריט."),
+   mc("What does the location scout do with the photos?",["She shows the director the places","She sells them","She sends them to the police","She puts them in the script"],0),
+   mc("Which place is mentioned as a possible location?",["A dirty, smelly market in South America","A forest in Canada","An airport in Europe","A school in Tel Aviv"],0),
+   mc("Which places can be locations for a movie?",["City streets, deserts and beaches","Only Hollywood studios","Only beaches","Only schools"],0)]}]},
+
+ {id:"p5",short:"Crime",title:"Crime Lab",he:"קטע 4: Solving a Crime",
+  note:"קראו שוב את Text 4, Solving a Crime (עמוד 9).",
+  blocks:[{instr:"בחרו את התשובה הנכונה.",items:[
+   tf("Two people can have the same fingerprints.",false,"בפסקה הראשונה: לאף שני אנשים אין אותן טביעות אצבע."),
+   mc("Why do police detectives need forensic technicians?",["Because the detectives can't solve the crime alone","Because the technicians drive the police cars","Because the detectives are afraid","Because the technicians know the criminals"],0),
+   mc("What kind of people are forensic technicians?",["Scientists","Judges","Drivers","Actors"],0),
+   mc("What must forensic technicians be careful to do at the crime scene?",["Collect all the evidence","Take photos of actors","Fix the cars","Read the script"],0),
+   mc("Which of these is evidence?",["Blood, hair and fingerprints","Tires, fuel and brakes","Scripts, photos and scenes","Deserts, beaches and streets"],0),
+   mc("Where do the forensic technicians go after the crime scene?",["To the laboratory","To the court","To a movie set","To a pit stop"],0),
+   mc("What do they do in the laboratory?",["They test the evidence","They explain it to a judge","They catch the criminal","They read the script"],0),
+   tf("The forensic technicians' job ends in the laboratory.",false,"אחר כך הם גם מגיעים לבית המשפט."),
+   mc("What would happen without the technicians' help?",["It would be harder to catch the criminals","The police would catch everybody faster","Criminals would never leave fingerprints","There would be no court"],0)]}]},
+
+ {id:"p6",short:"Crew",title:"Crew Call",he:"חלק מסכם: מי עושה מה?",
+  note:"עכשיו מחברים בין כל ארבעת הקטעים.",
+  blocks:[{instr:"התאימו כל משפט לעבודה המתאימה.",bank:JOBS,items:[
+   sel("He puts fuel in the car and changes the tires.","Race-car mechanic"),
+   sel("She reads the script and travels to take photos.","Location scout"),
+   sel("They look for DNA in a laboratory.","Forensic technician"),
+   sel("She uses imagination to turn a pretty girl into an old woman.","Make-up artist"),
+   sel("Every second is important for his work, and he works under pressure.","Race-car mechanic"),
+   sel("They explain the evidence in court.","Forensic technician")]}],
+  reflection:true}
+];
+/*ENDDATA*/
+
+(function(){
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const norm=s=>String(s||"").trim().toLowerCase().replace(/\s+/g," ");
+const strip=h=>String(h).replace(/<[^>]+>/g,"");
+const PASS="555";
+
+const ALL=[];
+SECTIONS.forEach(s=>s.blocks.forEach((b,bi)=>b.items.forEach((it,ii)=>{
+  it.id=s.id+"-"+bi+"-"+ii; it.sec=s.id; if(!it.bank&&b.bank)it.bank=b.bank; ALL.push(it);
+})));
+$("#sQ").textContent=ALL.length;
+
+let me=null, ans={}, submitted=false, take=1, refl="";
+
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function has(it){const v=ans[it.id];return v!==undefined&&v!==""}
+function isCorrect(it,v){
+  if(v===undefined||v==="")return false;
+  if(it.t==="mc")return +v===it.a;
+  if(it.t==="tf")return +v===(it.a?0:1);
+  if(it.t==="sel")return v===it.a;
+  return it.a.indexOf(norm(v))>-1;
+}
+function correctText(it){
+  if(it.t==="mc")return it.o[it.a];
+  if(it.t==="tf")return it.a?"True":"False";
+  if(it.t==="sel")return it.a;
+  return it.a[0];
+}
+function givenText(it,v){
+  if(v===undefined||v==="")return "";
+  if(it.t==="mc")return it.o[+v];
+  if(it.t==="tf")return +v===0?"True":"False";
+  return v;
+}
+
+/* ---------- build worksheet ---------- */
+function qHtml(it,n){
+  const id=it.id; let q="",ctl="";
+  if(it.t==="mc"||it.t==="tf"){
+    const labels=it.t==="tf"?["True","False"]:it.o;
+    let idx=labels.map((_,i)=>i); if(it.t==="mc")idx=shuffle(idx);
+    q='<p class="qt" id="t-'+id+'">'+it.q+'</p>';
+    ctl='<div class="opts" role="radiogroup" aria-labelledby="t-'+id+'">'+idx.map(i=>
+      '<label class="opt" data-i="'+i+'"><input type="radio" name="'+id+'" value="'+i+'"><span class="ot">'+esc(labels[i])+'</span></label>').join("")+'</div>';
+  }else if(it.t==="sel"){
+    const s='<select id="c-'+id+'" data-id="'+id+'" aria-label="answer"><option value="">— choose —</option>'+it.bank.map(w=>'<option value="'+esc(w)+'">'+esc(w)+'</option>').join("")+'</select>';
+    if(it.q.indexOf("___")>-1){const p=it.q.split("___");q='<p class="qt inline">'+p[0]+s+p[1]+'</p>';}
+    else{q='<p class="qt">'+it.q+'</p>';ctl=s;}
+  }else{
+    const s='<input type="text" id="c-'+id+'" data-id="'+id+'" dir="ltr" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="English">';
+    q='<p class="qt">'+it.q+'</p>';ctl=s;
+  }
+  return '<div class="q" id="q-'+id+'" data-id="'+id+'"><span class="qn">Q'+n+'</span>'+q+ctl+'<div class="fb" hidden></div></div>';
+}
+function build(){
+  let n=0,html="";
+  SECTIONS.forEach((s,si)=>{
+    html+='<section class="sec" id="sec-'+s.id+'"><header class="sec-h"><span class="st">STATION '+(si+1)+'</span><h2>'+esc(s.title)+'</h2><p class="he">'+esc(s.he)+'</p>'+(s.note?'<p class="note">'+esc(s.note)+'</p>':'')+'</header>';
+    s.blocks.forEach(b=>{
+      html+='<div class="block"><p class="instr">'+esc(b.instr)+'</p>';
+      if(b.showBank)html+='<div class="bank" aria-label="word bank">'+b.bank.map(w=>'<span>'+esc(w)+'</span>').join("")+'</div>';
+      b.items.forEach(it=>{n++;html+=qHtml(it,n)});
+      html+='</div>';
+    });
+    if(s.reflection){
+      html+='<div class="block"><p class="instr">שאלה פתוחה (ללא ציון)</p><div class="q" style="border-top:0"><p class="qt">Which of the four jobs would you like to do? Write 2–3 sentences in English and explain why.</p><textarea id="refl" maxlength="600" dir="ltr" placeholder="I would like to be a ... because ..."></textarea></div></div>';
+    }
+    html+='</section>';
+  });
+  $("#secMount").innerHTML=html;
+  $("#chips").innerHTML=SECTIONS.map((s,i)=>'<button type="button" class="chip" data-sec="'+s.id+'">'+(i+1)+'. '+esc(s.short)+' <span class="cnt" data-cnt="'+s.id+'"></span></button>').join("");
+  applyAns(); progress();
+}
+function applyAns(){
+  ALL.forEach(it=>{
+    const v=ans[it.id]; if(v===undefined||v==="")return;
+    if(it.t==="mc"||it.t==="tf"){const r=document.querySelector('input[name="'+it.id+'"][value="'+v+'"]');if(r)r.checked=true;}
+    else{const c=$("#c-"+it.id);if(c)c.value=v;}
+  });
+  const r=$("#refl");if(r)r.value=refl;
+}
+function progress(){
+  const done=ALL.filter(has).length;
+  $("#progBar").style.width=(done/ALL.length*100)+"%";
+  $("#progTxt").textContent=done+" / "+ALL.length;
+  SECTIONS.forEach(s=>{
+    const its=ALL.filter(i=>i.sec===s.id),d=its.filter(has).length;
+    const c=document.querySelector('[data-cnt="'+s.id+'"]');if(c)c.textContent=d+"/"+its.length;
+    const chip=document.querySelector('.chip[data-sec="'+s.id+'"]');if(chip)chip.classList.toggle("done",d===its.length);
+  });
+}
+function draftKey(){return "bts_draft_"+norm(me.name)+"|"+norm(me.cls)}
+function saveDraft(){try{localStorage.setItem(draftKey(),JSON.stringify({ans:ans,refl:refl}))}catch(e){}}
+function loadDraft(){try{const d=JSON.parse(localStorage.getItem(draftKey())||"null");if(d){ans=d.ans||{};refl=d.refl||"";}}catch(e){}}
+function clearDraft(){try{localStorage.removeItem(draftKey())}catch(e){}}
+
+/* ---------- events ---------- */
+$("#startForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  const name=$("#fName").value.trim(),cls=$("#fCls").value.trim();
+  if(!name||!cls){$("#startErr").textContent="יש למלא שם וכיתה.";return;}
+  me={name:name,cls:cls};ans={};refl="";loadDraft();
+  $("#start").hidden=true;$("#ws").hidden=false;
+  $("#pass").textContent=name+" · "+cls;
+  $("#mast").classList.add("clapped");
+  build();window.scrollTo({top:0});
+});
+document.addEventListener("change",e=>{
+  if(submitted||!me)return;
+  const t=e.target;
+  if(t.matches('input[type=radio]')){ans[t.name]=t.value;}
+  else if(t.matches('select[data-id]')){ans[t.dataset.id]=t.value;}
+  else return;
+  saveDraft();progress();
+});
+document.addEventListener("input",e=>{
+  if(submitted||!me)return;
+  const t=e.target;
+  if(t.matches('input[type=text][data-id]')){ans[t.dataset.id]=t.value;saveDraft();progress();}
+  else if(t.id==="refl"){refl=t.value;saveDraft();}
+});
+$("#chips").addEventListener("click",e=>{
+  const b=e.target.closest(".chip");if(!b)return;
+  const el=$("#sec-"+b.dataset.sec);if(el)el.scrollIntoView({behavior:"smooth",block:"start"});
+});
+
+/* ---------- submit ---------- */
+$("#submitBtn").addEventListener("click",()=>trySubmit(false));
+$("#warnGo").addEventListener("click",()=>trySubmit(true));
+$("#warnBack").addEventListener("click",()=>{
+  $("#warn").hidden=true;
+  const it=ALL.find(i=>!has(i));
+  if(it){const el=$("#q-"+it.id);el.scrollIntoView({behavior:"smooth",block:"center"});el.classList.add("flash");setTimeout(()=>el.classList.remove("flash"),2600);}
+});
+function trySubmit(force){
+  const miss=ALL.filter(i=>!has(i)).length;
+  if(miss&&!force){
+    $("#warnTxt").textContent="נשארו "+miss+" שאלות ללא תשובה. שאלה שלא נענתה נחשבת כשגויה.";
+    $("#warn").hidden=false;return;
+  }
+  finish();
+}
+const RANKS=[
+  [90,"Director's Cut","מצוין! שליטה מלאה בחומר."],
+  [80,"Lead Role","כל הכבוד, תוצאה טובה מאוד."],
+  [65,"Supporting Role","יפה. כדאי לחזור על כמה נושאים ולקרוא שוב את הקטעים."],
+  [0,"Take Two","כדאי לקרוא שוב את הקטעים, לחזור על המילים ולנסות שוב."]
+];
+function finish(){
+  submitted=true;
+  const secRes={};SECTIONS.forEach(s=>secRes[s.id]=[0,0]);
+  let correct=0;const okStr=[];
+  ALL.forEach(it=>{
+    const v=ans[it.id],ok=isCorrect(it,v);
+    secRes[it.sec][1]++;if(ok){secRes[it.sec][0]++;correct++;}
+    okStr.push(ok?"1":"0");
+    mark(it,v,ok);
+  });
+  document.querySelectorAll("#secMount input,#secMount select,#secMount textarea").forEach(x=>x.disabled=true);
+  const total=ALL.length,score=Math.round(correct/total*100);
+  $("#submitBox").hidden=true;$("#warn").hidden=true;
+  const rk=RANKS.find(r=>score>=r[0]);
+  const C=2*Math.PI*52;
+  $("#resultMount").innerHTML=
+   '<section class="result" id="resBox"><svg class="ring" viewBox="0 0 120 120" role="img" aria-label="ציון '+score+'"><circle class="trk" cx="60" cy="60" r="52"/><circle class="val" id="ringVal" cx="60" cy="60" r="52" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+C.toFixed(1)+'" transform="rotate(-90 60 60)"/><text x="60" y="73" text-anchor="middle">'+score+'</text></svg>'+
+   '<div><p class="rank">'+esc(rk[1])+'</p><p>'+esc(me.name)+', ענית נכון על '+correct+' מתוך '+total+' שאלות. '+esc(rk[2])+'</p>'+
+   '<ul class="bars">'+SECTIONS.map(s=>{const r=secRes[s.id];return '<li><span>'+esc(s.title)+'</span><div class="bar"><i style="width:'+(r[0]/r[1]*100)+'%"></i></div><b>'+r[0]+'/'+r[1]+'</b></li>'}).join("")+'</ul></div>'+
+   '<p class="savest" id="saveSt">שומר את התוצאה…</p>'+
+   '<div class="row"><button class="btn alt" type="button" id="reviewBtn">לבדיקת התשובות</button><button class="btn alt" type="button" id="retakeBtn">טייק נוסף</button></div></section>';
+  requestAnimationFrame(()=>{const rv=$("#ringVal");if(rv)rv.style.strokeDashoffset=(C*(1-score/100)).toFixed(1);});
+  $("#progTxt").textContent="הוגש";
+  $("#reviewBtn").addEventListener("click",()=>{const f=document.querySelector(".q.bad,.q.skip");(f||$("#secMount")).scrollIntoView({behavior:"smooth",block:"center"});});
+  $("#retakeBtn").addEventListener("click",retake);
+  $("#resBox").scrollIntoView({behavior:"smooth",block:"start"});
+  clearDraft();
+  const rec={name:me.name,cls:me.cls,score:score,correct:correct,total:total,sec:secRes,ok:okStr.join(""),ans:ans,refl:refl,ts:Date.now(),v:1};
+  saveResult(rec);
+}
+function mark(it,v,ok){
+  const el=$("#q-"+it.id),fb=el.querySelector(".fb");
+  const skipped=v===undefined||v==="";
+  el.classList.add(ok?"ok":(skipped?"skip":"bad"));
+  if(it.t==="mc"||it.t==="tf"){
+    const ci=it.t==="tf"?(it.a?0:1):it.a;
+    el.querySelectorAll(".opt").forEach(l=>{
+      const i=+l.dataset.i;
+      if(i===ci)l.classList.add("right");
+      else if(!skipped&&i===+v)l.classList.add("wrong");
+    });
+  }
+  let h=ok?'<b>נכון</b>':(skipped?'<b>לא נענתה</b>':'<b>לא נכון</b>');
+  if(!ok)h+='התשובה הנכונה: <span class="ans">'+esc(correctText(it))+'</span>';
+  if(it.why)h+='<span class="why">'+esc(it.why)+'</span>';
+  fb.innerHTML=h;fb.hidden=false;
+}
+function retake(){
+  take++;$("#sT").textContent=take;
+  ans={};refl="";submitted=false;
+  $("#resultMount").innerHTML="";$("#submitBox").hidden=false;
+  build();window.scrollTo({top:0,behavior:"smooth"});
+}
+
+/* ---------- storage ---------- */
+let dbp=null;
+function getDb(){
+  if(!dbp)dbp=(async()=>{try{return window.claude&&window.claude.use?await window.claude.use("db"):null}catch(e){return null}})();
+  return dbp;
+}
+function localRows(){try{return JSON.parse(localStorage.getItem("bts_local")||"[]")}catch(e){return []}}
+function pushLocal(rec){try{const a=localRows();a.push(rec);localStorage.setItem("bts_local",JSON.stringify(a));}catch(e){}}
+async function saveResult(rec){
+  const st=$("#saveSt");
+  try{
+    const db=await getDb();
+    if(!db)throw new Error("nodb");
+    await db.collection("results").add(rec);
+    if(st)st.textContent="התוצאה נשמרה, והמורה יכול לראות אותה.";
+  }catch(e){
+    pushLocal(rec);
+    if(st)st.textContent="לא הצלחנו לשמור את התוצאה אצל המורה. הציון שלכם מוצג כאן, ועותק נשמר במכשיר הזה. כדאי לצלם מסך ולהראות למורה.";
+  }
+}
+
+/* ---------- teacher ---------- */
+let unlocked=false,unsub=null,rows=[],tCls="",tQ="",tMode="first",sortKey="name",sortDir=1,openId=null,delId=null,tNote="";
+$("#tBtn").addEventListener("click",()=>{$("#student").hidden=true;$("#teacher").hidden=false;$("#tBtn").hidden=true;$("#app").classList.add("wide");if(!unlocked)setTimeout(()=>{const c=$("#code");if(c)c.focus()},50);});
+$("#tLock").addEventListener("click",lock);
+function lock(){
+  unlocked=false;if(unsub){unsub();unsub=null;}rows=[];
+  $("#tPanel").hidden=true;$("#tPanel").innerHTML="";$("#gate").hidden=false;$("#code").value="";$("#gateErr").textContent="";
+  $("#teacher").hidden=true;$("#student").hidden=false;$("#tBtn").hidden=false;$("#app").classList.remove("wide");
+}
+$("#gateForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  if($("#code").value.trim()!==PASS){$("#gateErr").textContent="הקוד שגוי. נסו שוב.";$("#code").select();return;}
+  unlocked=true;$("#gate").hidden=true;$("#gateErr").textContent="";
+  openTeacher();
+});
+function key(x){return norm(x.name)+"|"+norm(x.cls)}
+function derive(){
+  const all=rows.concat(localRows().map((r,i)=>Object.assign({},r,{id:"L"+i,local:true}))).sort((a,b)=>a.ts-b.ts);
+  const seen={},last={};
+  all.forEach(x=>{const k=key(x);seen[k]=(seen[k]||0)+1;x.take=seen[k];last[k]=x;});
+  let list=all.filter(x=>x.ok&&x.ok.length===ALL.length);
+  if(tMode==="first")list=list.filter(x=>x.take===1);
+  else if(tMode==="last")list=list.filter(x=>last[key(x)]===x);
+  const classes=Array.from(new Set(all.map(x=>x.cls||""))).filter(Boolean).sort((a,b)=>a.localeCompare(b,"he"));
+  if(tCls)list=list.filter(x=>(x.cls||"")===tCls);
+  if(tQ)list=list.filter(x=>norm(x.name).indexOf(norm(tQ))>-1);
+  list.sort((a,b)=>{
+    let r=0;
+    if(sortKey==="score")r=a.score-b.score;
+    else if(sortKey==="ts")r=a.ts-b.ts;
+    else r=(a.name||"").localeCompare(b.name||"","he");
+    return r*sortDir;
+  });
+  return {list:list,classes:classes,count:all.length};
+}
+function openTeacher(){
+  const p=$("#tPanel");p.hidden=false;
+  p.innerHTML='<div class="filters"><select id="fClass" aria-label="כיתה"></select><select id="fMode" aria-label="הגשות"><option value="first">הגשה ראשונה לכל תלמיד</option><option value="last">הגשה אחרונה לכל תלמיד</option><option value="all">כל ההגשות</option></select><input type="text" id="fSearch" placeholder="חיפוש שם" aria-label="חיפוש שם"><button class="btn alt tiny" type="button" id="csvBtn">ייצוא ל-CSV</button></div><p class="muted" id="tNote"></p><div id="tRes"></div>';
+  $("#fMode").value=tMode;
+  $("#fClass").addEventListener("change",e=>{tCls=e.target.value;renderT();});
+  $("#fMode").addEventListener("change",e=>{tMode=e.target.value;renderT();});
+  $("#fSearch").addEventListener("input",e=>{tQ=e.target.value;renderT();});
+  $("#csvBtn").addEventListener("click",exportCsv);
+  $("#tRes").addEventListener("click",tClick);
+  renderT();
+  getDb().then(db=>{
+    if(!db){tNote="הנתונים המשותפים אינם זמינים בתצוגה הזו. מוצגות רק הגשות ששמורות במכשיר הזה.";renderT();return;}
+    if(!unlocked)return;
+    unsub=db.collection("results").onSnapshot(snap=>{
+      rows=snap.docs.map(d=>Object.assign({},d.data(),{id:d.id}));renderT();
+    },err=>{tNote="לא ניתן לקרוא את התוצאות ("+(err&&err.code||"שגיאה")+").";renderT();});
+  });
+}
+function scCls(s){return s>=85?"hi":(s<60?"lo":"")}
+function renderT(){
+  if(!unlocked)return;
+  const d=derive(),list=d.list;
+  const fc=$("#fClass");
+  if(fc){fc.innerHTML='<option value="">כל הכיתות</option>'+d.classes.map(c=>'<option value="'+esc(c)+'">'+esc(c)+'</option>').join("");fc.value=tCls;}
+  $("#tNote").textContent=tNote;
+  const n=list.length,avg=n?Math.round(list.reduce((a,x)=>a+x.score,0)/n):0;
+  const hi=n?Math.max.apply(null,list.map(x=>x.score)):0,lo=n?Math.min.apply(null,list.map(x=>x.score)):0;
+  const students=new Set(list.map(key)).size;
+  let h='<dl class="stats"><div><dt>הגשות</dt><dd>'+n+'</dd></div><div><dt>תלמידים</dt><dd>'+students+'</dd></div><div><dt>ממוצע</dt><dd>'+(n?avg:"–")+'</dd></div><div><dt>ציון גבוה</dt><dd>'+(n?hi:"–")+'</dd></div><div><dt>ציון נמוך</dt><dd>'+(n?lo:"–")+'</dd></div></dl>';
+  if(!n){
+    h+='<p class="card">עדיין אין הגשות להצגה. כשתלמידים יסיימו, התוצאות יופיעו כאן אוטומטית.</p>';
+    $("#tRes").innerHTML=h;return;
+  }
+  const arrow=k=>sortKey===k?(sortDir>0?" ▲":" ▼"):"";
+  h+='<div class="tscroll"><table><thead><tr><th><button type="button" data-sort="name">שם'+arrow("name")+'</button></th><th>כיתה</th><th>טייק</th><th><button type="button" data-sort="score">ציון'+arrow("score")+'</button></th><th>נכון</th>'+SECTIONS.map(s=>'<th>'+esc(s.short)+'</th>').join("")+'<th><button type="button" data-sort="ts">הוגש'+arrow("ts")+'</button></th><th></th></tr></thead><tbody>';
+  list.forEach(x=>{
+    h+='<tr><td>'+esc(x.name)+(x.local?' <span class="muted">(מקומי)</span>':'')+'</td><td>'+esc(x.cls)+'</td><td>'+x.take+'</td><td><span class="sc '+scCls(x.score)+'">'+x.score+'</span></td><td>'+x.correct+'/'+x.total+'</td>'+
+      SECTIONS.map(s=>{const r=x.sec&&x.sec[s.id];return '<td>'+(r?Math.round(r[0]/r[1]*100):"–")+'</td>'}).join("")+
+      '<td>'+esc(new Date(x.ts).toLocaleString("he-IL",{dateStyle:"short",timeStyle:"short"}))+'</td><td>'+
+      '<button class="ghost tiny" type="button" data-open="'+esc(x.id)+'">'+(openId===x.id?"סגירה":"פרטים")+'</button> '+
+      (delId===x.id?'<button class="ghost tiny" type="button" data-del-yes="'+esc(x.id)+'">למחוק?</button> <button class="ghost tiny" type="button" data-del-no="1">בטל</button>':'<button class="ghost tiny" type="button" data-del="'+esc(x.id)+'">מחיקה</button>')+'</td></tr>';
+    if(openId===x.id)h+='<tr><td class="det" colspan="'+(8+SECTIONS.length)+'">'+detail(x)+'</td></tr>';
+  });
+  h+='</tbody></table></div>';
+  // histogram + hardest
+  const bins=[["90–100",90,100],["80–89",80,89],["70–79",70,79],["60–69",60,69],["0–59",0,59]];
+  const counts=bins.map(b=>list.filter(x=>x.score>=b[1]&&x.score<=b[2]).length),mx=Math.max.apply(null,counts)||1;
+  const secAvg=SECTIONS.map(s=>{let c=0,t=0;list.forEach(x=>{const r=x.sec&&x.sec[s.id];if(r){c+=r[0];t+=r[1];}});return {s:s,p:t?Math.round(c/t*100):0}});
+  const hard=ALL.map((it,i)=>{let c=0;list.forEach(x=>{if(x.ok.charAt(i)==="1")c++;});return {it:it,p:Math.round(c/n*100)}}).sort((a,b)=>a.p-b.p).slice(0,8);
+  h+='<div class="cols"><section><h3>התפלגות ציונים</h3><div class="hist">'+bins.map((b,i)=>'<div><span>'+b[0]+'</span><div class="bar"><i style="width:'+(counts[i]/mx*100)+'%"></i></div><b>'+counts[i]+'</b></div>').join("")+'</div><h3 style="margin-top:16px">ממוצע לפי חלק (באחוזים)</h3><div class="hist">'+secAvg.map(a=>'<div><span>'+esc(a.s.short)+'</span><div class="bar"><i style="width:'+a.p+'%"></i></div><b>'+a.p+'</b></div>').join("")+'</div></section>'+
+    '<section><h3>השאלות שהכי הרבה תלמידים טעו בהן</h3><ol class="hard">'+hard.map(x=>'<li><span class="en">'+esc(strip(x.it.q).slice(0,90))+'</span> · '+x.p+'% ענו נכון</li>').join("")+'</ol></section></div>';
+  $("#tRes").innerHTML=h;
+}
+function detail(x){
+  const wrong=[];
+  ALL.forEach((it,i)=>{if(x.ok.charAt(i)!=="1"){
+    const g=givenText(it,x.ans&&x.ans[it.id]);
+    wrong.push('<li><span class="en">'+esc(strip(it.q))+'</span><br>ענה: <span class="en">'+(g?esc(g):"לא נענתה")+'</span> · נכון: <span class="en">'+esc(correctText(it))+'</span></li>');
+  }});
+  return '<b>שאלות שנענו לא נכון ('+wrong.length+')</b>'+(wrong.length?'<ul>'+wrong.join("")+'</ul>':' אין, כל התשובות נכונות.')+
+    '<p style="margin-top:10px"><b>שאלה פתוחה:</b> <span class="en">'+(x.refl?esc(x.refl):"לא נכתבה תשובה")+'</span></p>';
+}
+async function tClick(e){
+  const t=e.target.closest("button");if(!t)return;
+  if(t.dataset.sort){const k=t.dataset.sort;if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=k==="name"?1:-1;}renderT();}
+  else if(t.dataset.open){openId=openId===t.dataset.open?null:t.dataset.open;renderT();}
+  else if(t.dataset.del){delId=t.dataset.del;renderT();}
+  else if(t.dataset.delNo){delId=null;renderT();}
+  else if(t.dataset.delYes){
+    const id=t.dataset.delYes;delId=null;
+    if(id.charAt(0)==="L"){
+      const a=localRows();a.splice(+id.slice(1),1);try{localStorage.setItem("bts_local",JSON.stringify(a))}catch(x){}
+      renderT();
+    }else{
+      try{const db=await getDb();await db.doc("results/"+id).delete();}catch(x){tNote="המחיקה נכשלה.";renderT();}
+    }
+  }
+}
+function csvCell(v){let s=String(v==null?"":v);if(/^[=+\-@]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';}
+async function exportCsv(){
+  const list=derive().list;
+  const head=["שם","כיתה","טייק","ציון","נכון","סה\"כ"].concat(SECTIONS.map(s=>s.title+" %")).concat(["הוגש","שאלה פתוחה"]);
+  const lines=[head.map(csvCell).join(",")].concat(list.map(x=>[x.name,x.cls,x.take,x.score,x.correct,x.total].concat(SECTIONS.map(s=>{const r=x.sec&&x.sec[s.id];return r?Math.round(r[0]/r[1]*100):""})).concat([new Date(x.ts).toLocaleString("he-IL"),x.refl||""]).map(csvCell).join(",")));
+  try{
+    const dl=window.claude&&window.claude.use?await window.claude.use("downloads"):null;
+    if(!dl){tNote="הורדת קבצים אינה זמינה בתצוגה הזו.";renderT();return;}
+    await dl.save({filename:"behind-the-scenes-results.csv",data:"﻿"+lines.join("\r\n")});
+  }catch(e){if(!e||e.code!=="declined"){tNote="לא ניתן היה לייצא את הקובץ.";renderT();}}
+}
+})();
+</script>
+
+</body></html>
